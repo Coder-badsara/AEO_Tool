@@ -35,7 +35,9 @@ export default function EngineResult({ result }: Props) {
 
       <div className="mt-4 rounded-xl border border-white/8 bg-slate-950/50 p-4">
         <p className="text-xs uppercase tracking-[0.25em] text-white/35">Sentiment</p>
-        <p className={cn("mt-1 text-sm font-medium capitalize", statusColor)}>{sentiment.replace("_", " ")}</p>
+        <p className={cn("mt-1 text-sm font-medium capitalize", mentioned ? statusColor : "text-slate-400")}>
+          {mentioned ? sentiment.replace("_", " ") : "Not mentioned"}
+        </p>
       </div>
 
       {snippet ? (
@@ -43,7 +45,7 @@ export default function EngineResult({ result }: Props) {
           “{snippet}”
         </p>
       ) : (
-        <p className="mt-4 text-sm leading-6 text-white/45">No direct product snippet detected in this response.</p>
+        <p className="mt-4 text-sm leading-6 text-white/45">Your product was not mentioned by this AI model in the search results.</p>
       )}
 
       <details className="mt-4 rounded-xl border border-white/8 bg-black/20 p-3">

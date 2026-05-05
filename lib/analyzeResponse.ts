@@ -76,19 +76,8 @@ export function analyzeResponse(
     } else {
       sentiment = "neutral";
     }
-  } else if (!mentioned) {
-    // Analyze overall sentiment in the response for recommendations
-    const positiveCount = POSITIVE_WORDS.filter(word => responseLower.includes(word)).length;
-    const negativeCount = NEGATIVE_WORDS.filter(word => responseLower.includes(word)).length;
-    
-    if (negativeCount > positiveCount && negativeCount > 0) {
-      sentiment = "negative";
-    } else if (positiveCount > 0) {
-      sentiment = "positive";
-    } else {
-      sentiment = "neutral";
-    }
   }
+  // If product is not mentioned, sentiment stays "not_mentioned"
 
   const mentionedCompetitors = competitors.filter((competitor) =>
     responseLower.includes(competitor.toLowerCase())
