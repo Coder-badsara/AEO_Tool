@@ -21,29 +21,33 @@ function findProductInResponse(response: string, productName: string, keywords: 
   const responseLower = response.toLowerCase();
   const productLower = productName.toLowerCase();
   
-  // Exact match
+  // Exact match - find the sentence containing product name
   if (responseLower.includes(productLower)) {
     const sentences = buildSentenceWindows(response);
     const sentenceIndex = sentences.findIndex(s => s.toLowerCase().includes(productLower));
+    const foundSentence = sentences[sentenceIndex] ?? "";
     return {
       mentioned: true,
-      snippet: sentences[sentenceIndex] ?? "",
+      snippet: foundSentence,
       sentenceIndex: sentenceIndex >= 0 ? sentenceIndex + 1 : 0
     };
   }
   
-  // Check for keywords (at least 2 keywords should match)
-  const matchedKeywords = keywords.filter(keyword => responseLower.includes(keyword));
-  if (matchedKeywords.length >= Math.max(2, Math.ceil(keywords.length * 0.6))) {
-    const sentences = buildSentenceWindows(response);
-    const sentenceIndex = sentences.findIndex(s => 
-      matchedKeywords.some(keyword => s.toLowerCase().includes(keyword))
-    );
-    return {
-      mentioned: true,
-      snippet: sentences[sentenceIndex] ?? "",
-      sentenceIndex: sentenceIndex >= 0 ? sentenceIndex + 1 : 0
-    };
+  // Check if most of the product keywords appear in close proximity (same sentence or paragraph)
+  const sentences = buildSentenceWindows(response);
+  for (let i = 0; i < sentences.length; i++) {
+    const sentence = sentences[i].toLowerCase();
+    const matchedKeywordsInSentence = keywords.filter(keyword => sentence.includes(keyword));
+    
+    // Require at least 70% of keywords to be in the same sentence for it to count as a mention
+    const keywordThreshold = Math.ceil(keywords.length * 0.7);
+    if (matchedKeywordsInSentence.length >= keywordThreshold && matchedKeywordsInSentence.length >= 2) {
+      return {
+        mentioned: true,
+        snippet: sentences[i],
+        sentenceIndex: i + 1
+      };
+    }
   }
   
   return { mentioned: false, snippet: "", sentenceIndex: 0 };

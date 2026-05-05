@@ -6,7 +6,7 @@ const GEMMA_MODEL = "google/gemma-3n-e2b-it:free";
 const GPT_OSS_MODEL = "openai/gpt-oss-120b:free";
 
 const SYSTEM_PROMPT =
-  "You are a helpful product recommendation assistant. Answer the user's query with specific product recommendations. Be comprehensive, rank products if possible, and keep responses under 300 words.";
+  "You are a helpful product recommendation assistant. Answer the user's query with specific product recommendations. Be comprehensive, rank products if possible, and keep responses under 300 words. IMPORTANT: Always use Indian Rupees (₹) for currency. Convert any USD or foreign currency prices to INR and use the ₹ symbol.";
 
 function requireKey(value: string | undefined, name: string) {
   if (!value) {
@@ -93,6 +93,9 @@ export async function queryGPT(query: string): Promise<string> {
     }
   }
 
+  // Post-process: Replace $ with ₹ if found
+  content = content.replace(/\$/g, "₹");
+
   console.log("Nemotron Response received, length:", content.length);
   return content;
 }
@@ -103,11 +106,14 @@ export async function queryClaude(query: string): Promise<string> {
     apiKey: requireKey(process.env.OPENROUTER_API_KEY, "OPENROUTER_API_KEY")
   });
 
+  // Add INR instruction to the query since Gemma doesn't support system prompts
+  const enrichedQuery = `${query}\n\nIMPORTANT: Use Indian Rupees (₹) for all prices. Do not use $ or USD.`;
+
   const stream = await (openrouter.chat as any).send({
     chatRequest: {
       model: GEMMA_MODEL,
       messages: [
-        { role: "user", content: query }
+        { role: "user", content: enrichedQuery }
       ],
       max_tokens: 500,
       temperature: 0.7,
@@ -122,6 +128,9 @@ export async function queryClaude(query: string): Promise<string> {
       content += chunkContent;
     }
   }
+
+  // Post-process: Replace $ with ₹ if found
+  content = content.replace(/\$/g, "₹");
 
   console.log("Gemma Response received, length:", content.length);
   return content;
@@ -153,6 +162,9 @@ export async function queryGemini(query: string): Promise<string> {
       content += chunkContent;
     }
   }
+
+  // Post-process: Replace $ with ₹ if found
+  content = content.replace(/\$/g, "₹");
 
   console.log("GPT-OSS-120B Response received, length:", content.length);
   return content;
